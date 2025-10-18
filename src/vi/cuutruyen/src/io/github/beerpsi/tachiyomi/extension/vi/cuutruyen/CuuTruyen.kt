@@ -296,7 +296,7 @@ private const val TITLE_CACHE_LOAD_FACTOR = 0.7F
 private const val DOMAIN_PREF_KEY = "domain"
 private const val DEFAULT_DOMAIN = "cuutruyen.net"
 private const val DOMAIN_TITLE = "Tên miền"
-private val DOMAINS = arrayOf("cuutruyen.net", "nettrom.com", "hetcuutruyen.net", "cuutruyent9sv7.xyz")
+private val DOMAINS = arrayOf("cuutruyen.net", "nettrom.com", "hetcuutruyen.net", "cuutruyen5c844.site")
 
 private class TagFilter(val tags: List<Tag>) : Filter.Select<String>(
     "Thể loại",
