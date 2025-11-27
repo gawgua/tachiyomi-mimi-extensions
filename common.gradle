@@ -11,7 +11,7 @@ Project theme = ext.has("themePkg") ? project(":lib-multisrc:$themePkg") : null
 android {
     compileSdkVersion AndroidConfig.compileSdk
 
-    namespace "io.github.beerpsi.tachiyomi.extension"
+    namespace "io.github.gawgua.tachiyomi.extension"
     sourceSets {
         main {
             manifest.srcFile "AndroidManifest.xml"

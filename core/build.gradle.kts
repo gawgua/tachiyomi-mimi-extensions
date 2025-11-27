@@ -9,7 +9,7 @@ android {
         minSdk = AndroidConfig.minSdk
     }
 
-    namespace = "io.github.beerpsi.tachiyomi.extension"
+    namespace = "io.github.gawgua.tachiyomi.extension"
 
     @Suppress("UnstableApiUsage")
     sourceSets {
