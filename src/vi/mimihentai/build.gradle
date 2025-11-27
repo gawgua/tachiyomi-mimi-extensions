@@ -1,0 +1,8 @@
+ext {
+    extName = 'MimiHentai'
+    extClass = '.MimiHentai'
+    extVersionCode = 1
+    isNsfw = true
+}
+
+apply from: "$rootDir/common.gradle"
