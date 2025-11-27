@@ -50,7 +50,7 @@ class MimiHentai : HttpSource() {
         return data.map {
             it.toSChapter().apply {
                 date_upload = dateFormatter.parse(
-                    it.createdAt.replace("T", " ").dropLast(2)
+                    it.createdAt.replace("T", " ").dropLast(2),
                 )?.time ?: 0L
             }
         }
@@ -84,7 +84,6 @@ class MimiHentai : HttpSource() {
             addPathSegments("tatcatruyen")
             addQueryParameter("page", (page - 1).toString()) // Tachiyomi starts from 1
             addQueryParameter("sort", "updated_at")
-            addQueryParameter("ex", "196")
             addQueryParameter("reup", "false")
         }.build().toString()
 
@@ -149,14 +148,18 @@ class MimiHentai : HttpSource() {
         filters: FilterList,
     ): Request {
         // https://api.mimihentai.com/api/v2/manga/advance-search?sort=updated_at&author&parody&character&max=18&genre=416,417&ex=196&page=0&name
-        var genreStr = ""
+        var includeStr = ""
+        var excludeStr = ""
         if (filters.isNotEmpty()) {
             val group = filters[0];
             if (group is GenreGroup) {
-                val genres = group.state.mapNotNull { if (it.state == Filter.TriState.STATE_INCLUDE) it.name else null }
-                genreStr = genres.joinToString(",") { e ->
-                    GENRES.find { it.name == e }?.id.toString()
-                }
+                val filtersState = group.state
+                includeStr = filtersState.filter { it.state == Filter.TriState.STATE_INCLUDE }
+                    .map { e -> GENRES.find { it.name == e.name }?.id.toString() }
+                    .joinToString(",") { it }
+                excludeStr = filtersState.filter { it.state == Filter.TriState.STATE_EXCLUDE }
+                    .map { e -> GENRES.find { it.name == e.name }?.id.toString() }
+                    .joinToString(",") { it }
             }
         }
 
@@ -164,8 +167,8 @@ class MimiHentai : HttpSource() {
             addPathSegments("advance-search")
             addQueryParameter("sort", "updated_at")
             addQueryParameter("page", (page - 1).toString())
-            addQueryParameter("genre", genreStr)
-            addQueryParameter("ex", "196")
+            addQueryParameter("genre", includeStr)
+            addQueryParameter("ex", excludeStr)
             addQueryParameter("max", POPULAR_MANGA_LIMIT.toString())
             addQueryParameter("name", query)
         }.build().toString()
@@ -186,11 +189,11 @@ class MimiHentai : HttpSource() {
     }
 }
 
-private class GenreState(genre: Genre) : Filter.TriState (
+private class GenreState(genre: Genre) : Filter.TriState(
     name = genre.name,
 )
 
-private class GenreGroup(list: List<Genre>) : Filter.Group<Filter.TriState> (
+private class GenreGroup(list: List<Genre>) : Filter.Group<Filter.TriState>(
     "Thể loại",
-    list.map { GenreState(it) }
+    list.map { GenreState(it) },
 )
