@@ -1,7 +1,7 @@
 package io.github.gawgua.tachiyomi.extension.vi.mimihentai
 
-import android.util.Log
 import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
@@ -9,7 +9,9 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
 import io.github.gawgua.tachiyomi.extension.vi.mimihentai.models.dto.Chapter
+import io.github.gawgua.tachiyomi.extension.vi.mimihentai.models.dto.Genre
 import io.github.gawgua.tachiyomi.extension.vi.mimihentai.models.dto.Manga
+import io.github.gawgua.tachiyomi.extension.vi.mimihentai.models.dto.GENRES
 import io.github.gawgua.tachiyomi.extension.vi.mimihentai.models.response.AllTitleResponse
 import io.github.gawgua.tachiyomi.extension.vi.mimihentai.models.response.ChapterResponse
 import kotlinx.serialization.decodeFromString
@@ -147,10 +149,22 @@ class MimiHentai : HttpSource() {
         filters: FilterList,
     ): Request {
         // https://api.mimihentai.com/api/v2/manga/advance-search?sort=updated_at&author&parody&character&max=18&genre=416,417&ex=196&page=0&name
+        var genreStr = ""
+        if (filters.isNotEmpty()) {
+            val group = filters[0];
+            if (group is GenreGroup) {
+                val genres = group.state.mapNotNull { if (it.state == Filter.TriState.STATE_INCLUDE) it.name else null }
+                genreStr = genres.joinToString(",") { e ->
+                    GENRES.find { it.name == e }?.id.toString()
+                }
+            }
+        }
+
         val url = API_URL.newBuilder().apply {
             addPathSegments("advance-search")
             addQueryParameter("sort", "updated_at")
-            addQueryParameter("page", page.toString())
+            addQueryParameter("page", (page - 1).toString())
+            addQueryParameter("genre", genreStr)
             addQueryParameter("ex", "196")
             addQueryParameter("max", POPULAR_MANGA_LIMIT.toString())
             addQueryParameter("name", query)
@@ -160,7 +174,7 @@ class MimiHentai : HttpSource() {
     }
 
     override fun getFilterList(): FilterList {
-        return FilterList()
+        return FilterList(GenreGroup(GENRES))
     }
 
     private inline fun <reified T> Response.parseAs(): T {
@@ -171,3 +185,12 @@ class MimiHentai : HttpSource() {
         timeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh")
     }
 }
+
+private class GenreState(genre: Genre) : Filter.TriState (
+    name = genre.name,
+)
+
+private class GenreGroup(list: List<Genre>) : Filter.Group<Filter.TriState> (
+    "Thể loại",
+    list.map { GenreState(it) }
+)
